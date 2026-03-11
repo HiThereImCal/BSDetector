@@ -1,640 +1,1865 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🦆 Rubber Duck Disco Inferno 🦆</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Bungee+Shade&family=Fredoka:wght@400;700&display=swap');
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SignalCheck</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-soft: #111831;
+      --panel: rgba(17, 24, 49, 0.88);
+      --panel-2: rgba(20, 29, 58, 0.92);
+      --line: rgba(255,255,255,0.08);
+      --line-strong: rgba(255,255,255,0.16);
+      --text: #edf2ff;
+      --muted: #b8c2ea;
+      --soft: #91a0cf;
+      --accent: #7c9cff;
+      --accent-2: #68e2c2;
+      --ok: #6ee593;
+      --danger: #ff758a;
+      --warning: #ffc466;
+      --shadow: 0 30px 70px rgba(0, 0, 0, 0.42);
+      --radius: 24px;
+      --radius-sm: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace;
+      --sans: Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    overflow: hidden;
-    background: #0a0012;
-    cursor: crosshair;
-    font-family: 'Fredoka', sans-serif;
-  }
-  canvas { display: block; }
+    * { box-sizing: border-box; }
 
-  #ui-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    pointer-events: none;
-    z-index: 10;
-    text-align: center;
-    padding: 18px;
-  }
-  #title {
-    font-family: 'Bungee Shade', cursive;
-    font-size: clamp(22px, 5vw, 52px);
-    background: linear-gradient(90deg, #ff0055, #ffcc00, #00ffcc, #ff00ff, #ff0055);
-    background-size: 300% 100%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: rainbow 3s linear infinite;
-    text-shadow: none;
-    filter: drop-shadow(0 0 12px rgba(255,0,85,0.5));
-    letter-spacing: 2px;
-  }
-  @keyframes rainbow {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 300% 50%; }
-  }
-  #subtitle {
-    color: rgba(255,255,255,0.6);
-    font-size: clamp(11px, 2vw, 16px);
-    margin-top: 4px;
-    letter-spacing: 1px;
-  }
-  #duck-count {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #ffcc00;
-    font-family: 'Bungee Shade', cursive;
-    font-size: clamp(14px, 3vw, 24px);
-    pointer-events: none;
-    z-index: 10;
-    filter: drop-shadow(0 0 8px rgba(255,204,0,0.6));
-  }
-  #panic-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 10;
-    pointer-events: all;
-    background: linear-gradient(135deg, #ff0055, #ff6600);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 50px;
-    font-family: 'Fredoka', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(255,0,85,0.5);
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  #panic-btn:hover {
-    transform: scale(1.1) rotate(-3deg);
-    box-shadow: 0 6px 30px rgba(255,0,85,0.7);
-  }
-  #vibe-label {
-    position: fixed;
-    bottom: 60px;
-    right: 20px;
-    z-index: 10;
-    color: rgba(255,255,255,0.4);
-    font-size: 11px;
-    pointer-events: none;
-    text-align: center;
-  }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top left, rgba(124,156,255,0.16), transparent 30%),
+        radial-gradient(circle at top right, rgba(104,226,194,0.12), transparent 26%),
+        linear-gradient(180deg, #0a0f1f 0%, #0d1327 100%);
+      color: var(--text);
+      font-family: var(--sans);
+    }
 
-  .quack-popup {
-    position: fixed;
-    pointer-events: none;
-    z-index: 100;
-    font-size: 32px;
-    animation: quackFloat 1.2s ease-out forwards;
-  }
-  @keyframes quackFloat {
-    0% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
-    50% { opacity: 1; transform: translateY(-60px) scale(1.3) rotate(15deg); }
-    100% { opacity: 0; transform: translateY(-120px) scale(0.5) rotate(-20deg); }
-  }
-</style>
+    body {
+      padding: 24px;
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      min-height: calc(100vh - 48px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .state {
+      width: 100%;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .compose-card {
+      width: min(100%, 760px);
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    h1, h2, h3, h4, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      letter-spacing: -0.04em;
+      font-weight: 650;
+    }
+
+    .input-shell {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .input-head {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 12px 12px 0;
+    }
+
+    .plus-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--line-strong);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background .2s ease, transform .12s ease, border-color .2s ease;
+    }
+
+    .plus-btn:hover {
+      background: rgba(255,255,255,0.07);
+      transform: translateY(-1px);
+    }
+
+    .plus-btn.open {
+      background: rgba(124,156,255,0.14);
+      border-color: rgba(124,156,255,0.36);
+    }
+
+    textarea,
+    input[type="password"],
+    input[type="text"],
+    select {
+      width: 100%;
+      font: inherit;
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line-strong);
+      border-radius: 16px;
+      padding: 14px 15px;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    textarea:focus,
+    input[type="password"]:focus,
+    input[type="text"]:focus,
+    select:focus {
+      border-color: rgba(124,156,255,0.72);
+      box-shadow: 0 0 0 4px rgba(124,156,255,0.16);
+      background: rgba(255,255,255,0.06);
+    }
+
+    #transcriptInput {
+      min-height: 112px;
+      max-height: 240px;
+      resize: none;
+      overflow-y: auto;
+      line-height: 1.55;
+      font-size: 16px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 6px 16px 14px;
+      box-shadow: none;
+    }
+
+    .advanced {
+      background: rgba(255,255,255,0.02);
+      border-top: 1px solid var(--line);
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(-4px);
+      pointer-events: none;
+      padding: 0 16px;
+      transition: max-height .32s ease, opacity .22s ease, transform .22s ease, padding .22s ease;
+    }
+
+    .advanced.open {
+      max-height: 900px;
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      padding: 0 16px 16px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field label {
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .field .hint {
+      color: var(--soft);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .advanced textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .checkbox-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-wrap input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .input-footer {
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 12px 12px;
+      flex-wrap: wrap;
+    }
+
+    .upload-group,
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .file-meta {
+      color: var(--soft);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .12s ease, background .2s ease, opacity .2s ease, border-color .2s ease;
+      border: 1px solid transparent;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.09);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent), #5f78ff);
+      color: white;
+      box-shadow: 0 18px 42px rgba(95, 120, 255, 0.26);
+    }
+
+    .btn.secondary {
+      background: rgba(255,255,255,0.04);
+      border-color: var(--line-strong);
+    }
+
+    .btn.ghost {
+      background: transparent;
+      border-color: var(--line);
+    }
+
+    .support-row { display: none; }
+    .subtle { display: none; }
+
+    .error {
+      margin-top: 16px;
+      color: #ffd6dc;
+      background: rgba(255,117,138,0.12);
+      border: 1px solid rgba(255,117,138,0.22);
+      border-radius: 16px;
+      padding: 14px 16px;
+      line-height: 1.5;
+    }
+
+    .processing-card {
+      width: min(100%, 720px);
+      margin: 0 auto;
+      padding: 48px 34px;
+      text-align: center;
+    }
+
+    .processing-top {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 26px;
+    }
+
+    .orb-shell {
+      width: 148px;
+      height: 148px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle, rgba(124,156,255,0.12), rgba(124,156,255,0.02) 68%, transparent 72%);
+    }
+
+    .orb {
+      width: 82px;
+      height: 82px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.75), rgba(124,156,255,0.96) 22%, rgba(88,114,255,0.9) 52%, rgba(104,226,194,0.78) 100%);
+      box-shadow:
+        0 0 34px rgba(124,156,255,0.45),
+        0 0 70px rgba(104,226,194,0.18);
+      animation: pulse 1.9s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(0.98); filter: saturate(1); }
+      50% { transform: scale(1.05); filter: saturate(1.12); }
+    }
+
+    .processing-card h2 {
+      font-size: 34px;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+
+    .processing-copy {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .processing-meta {
+      margin-top: 26px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .stage-log {
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+      text-align: left;
+      display: grid;
+      gap: 10px;
+    }
+
+    .stage-item {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .stage-item.active {
+      border-color: rgba(124,156,255,0.34);
+      background: rgba(124,156,255,0.10);
+      color: var(--text);
+    }
+
+    .results-shell {
+      width: min(100%, 1120px);
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .results-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 0 4px;
+    }
+
+    .results-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .results-title h2 {
+      font-size: 26px;
+      letter-spacing: -0.04em;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .report-card,
+    .source-card {
+      padding: 24px;
+    }
+
+    .report-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .report-header h3 {
+      font-size: 30px;
+      letter-spacing: -0.04em;
+      margin-top: 10px;
+    }
+
+    .verdict {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .verdict.credible { background: rgba(110,229,147,0.14); color: #9af0b6; }
+    .verdict.mixed { background: rgba(255,196,102,0.14); color: #ffd88d; }
+    .verdict.questionable { background: rgba(255,117,138,0.12); color: #ffafbb; }
+    .verdict.bs { background: rgba(255,80,80,0.16); color: #ffb1b1; }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      width: min(100%, 420px);
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .metric .k {
+      color: var(--soft);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .metric .v {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .section-block + .section-block {
+      margin-top: 22px;
+    }
+
+
+    .detail-block {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      border-radius: 18px;
+      padding: 14px 16px;
+    }
+
+    .detail-block + .detail-block { margin-top: 12px; }
+
+    .detail-summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text);
+      font-weight: 750;
+      letter-spacing: -0.01em;
+    }
+
+    .detail-summary::-webkit-details-marker { display: none; }
+
+    .detail-summary::after {
+      content: "+";
+      color: var(--soft);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    details[open] > .detail-summary::after {
+      content: "−";
+    }
+
+    .detail-inner { margin-top: 12px; }
+
+    .section-head {
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .summary-box {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+      border-radius: 18px;
+      padding: 18px;
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .flag-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .flag-card {
+      border-radius: 18px;
+      padding: 18px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .flag-card.green {
+      border: 1px solid rgba(110,229,147,0.42);
+      box-shadow: inset 0 1px 0 rgba(110,229,147,0.04);
+    }
+
+    .flag-card.red {
+      border: 1px solid rgba(255,117,138,0.42);
+      box-shadow: inset 0 1px 0 rgba(255,117,138,0.04);
+    }
+
+    .flag-card h4 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .list-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .list-item {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
+      padding: 15px 16px;
+    }
+
+    .list-item h4 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+
+    .list-item p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.58;
+      font-size: 14px;
+    }
+
+    .source-card details {
+      border-top: 1px solid var(--line);
+      margin-top: 14px;
+      padding-top: 14px;
+    }
+
+    .source-summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .source-summary::-webkit-details-marker { display: none; }
+
+    .source-summary::after {
+      content: "+";
+      color: var(--soft);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    details[open] .source-summary::after {
+      content: "−";
+    }
+
+    .transcript {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      background: #0f1430;
+      border-radius: 16px;
+      padding: 18px;
+      color: var(--muted);
+      white-space: pre-wrap;
+      line-height: 1.62;
+      font-size: 14px;
+      max-height: 480px;
+      overflow: auto;
+      font-family: var(--mono);
+    }
+
+    .results-note {
+      color: var(--soft);
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .field-grid,
+      .flag-grid,
+      .metric-row {
+        grid-template-columns: 1fr;
+      }
+
+      .compose-card,
+      .processing-card,
+      .report-card,
+      .source-card {
+        padding: 20px;
+      }
+
+      #transcriptInput {
+        min-height: 220px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      body {
+        padding: 14px;
+      }
+
+      .shell {
+        min-height: calc(100vh - 28px);
+      }
+
+      .compose-card,
+      .processing-card,
+      .report-card,
+      .source-card {
+        padding: 16px;
+        border-radius: 20px;
+      }
+
+      .processing-card h2,
+      .report-header h3 {
+        font-size: 26px;
+      }
+
+      .input-head,
+      .input-footer {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      #transcriptInput {
+        min-height: 96px;
+        max-height: 220px;
+        padding: 6px 14px 12px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="shell">
+    <section id="composeState" class="state">
+      <div class="compose-card panel">
+        <div class="brand-row">
+          <h1>SignalCheck</h1>
+        </div>
 
-<div id="ui-overlay">
-  <div id="title">PANIC AT THE DUCK-SCO</div>
-  <div id="subtitle">click anywhere to summon ducks · they live for the groove</div>
-</div>
-<div id="duck-count">🦆 × 0</div>
-<button id="panic-btn">🚨 DUCK PANIC</button>
-<div id="vibe-label">↑ chaos mode</div>
+        <div class="input-shell">
+          <div class="input-head">
+            <button id="toggleAdvancedBtn" class="plus-btn" type="button" aria-expanded="false" aria-controls="advancedPanel" aria-label="Advanced settings">+</button>
+          </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-// ============================================================
-//  🦆 RUBBER DUCK DISCO INFERNO 🦆
-//  The ducks demand rhythm. The ducks demand respect.
-// ============================================================
+          <textarea id="transcriptInput" placeholder="Paste a transcript, explanation, sales pitch, product description, or meeting notes."></textarea>
 
-const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x0a0012, 0.012);
+          <div id="advancedPanel" class="advanced">
+            <div class="field-grid">
+              <div class="field">
+                <label for="apiKey">OpenAI API key</label>
+                <input id="apiKey" type="password" placeholder="Paste your API key here" autocomplete="off" />
+                <div class="hint">Prototype mode uses the user's own key in the browser.</div>
+              </div>
 
-const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 200);
-camera.position.set(0, 18, 28);
-camera.lookAt(0, 2, 0);
+              <div class="field">
+                <label for="analysisModel">Analysis model</label>
+                <select id="analysisModel">
+                  <option value="gpt-5.4" selected>gpt-5.4</option>
+                  <option value="gpt-5-mini">gpt-5-mini</option>
+                  <option value="gpt-4.1">gpt-4.1</option>
+                </select>
+              </div>
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
-document.body.appendChild(renderer.domElement);
+              <div class="field">
+                <label for="reasoningEffort">Reasoning effort</label>
+                <select id="reasoningEffort">
+                  <option value="low">low</option>
+                  <option value="medium" selected>medium</option>
+                  <option value="high">high</option>
+                </select>
+              </div>
 
-// ---- DISCO FLOOR ----
-const floorSize = 40;
-const tileCount = 20;
-const floorGroup = new THREE.Group();
-const tileMeshes = [];
+              <div class="field">
+                <label for="audioModel">Audio transcription</label>
+                <select id="audioModel">
+                  <option value="gpt-4o-transcribe-diarize" selected>gpt-4o-transcribe-diarize</option>
+                  <option value="gpt-4o-transcribe">gpt-4o-transcribe</option>
+                  <option value="gpt-4o-mini-transcribe">gpt-4o-mini-transcribe</option>
+                </select>
+              </div>
 
-for (let x = 0; x < tileCount; x++) {
-  for (let z = 0; z < tileCount; z++) {
-    const geo = new THREE.BoxGeometry(floorSize/tileCount * 0.95, 0.3, floorSize/tileCount * 0.95);
-    const mat = new THREE.MeshStandardMaterial({
-      color: 0x111111,
-      metalness: 0.8,
-      roughness: 0.2,
-      emissive: 0x000000,
-    });
-    const tile = new THREE.Mesh(geo, mat);
-    tile.position.set(
-      (x - tileCount/2 + 0.5) * (floorSize/tileCount),
-      -0.15,
-      (z - tileCount/2 + 0.5) * (floorSize/tileCount)
-    );
-    tile.receiveShadow = true;
-    tile.userData = { gx: x, gz: z };
-    floorGroup.add(tile);
-    tileMeshes.push(tile);
-  }
-}
-scene.add(floorGroup);
+              <div class="field" style="grid-column: 1 / -1;">
+                <label for="additionalContext">Additional context</label>
+                <textarea id="additionalContext" placeholder="Optional: add background, goals, audience, role context, or anything the analysis should keep in mind."></textarea>
+              </div>
+            </div>
 
-// ---- DISCO BALL (THE GLORIOUS ONE) ----
-const discoBallGroup = new THREE.Group();
-discoBallGroup.position.set(0, 16, 0);
+            <div class="toggle-row">
+              <label class="checkbox-wrap" for="rememberKey">
+                <input id="rememberKey" type="checkbox" />
+                <span>Remember API key on this device</span>
+              </label>
+              <button id="clearAllBtn" class="btn ghost" type="button">Clear app data</button>
+            </div>
+          </div>
 
-// Core sphere (dark base)
-const discoBallGeo = new THREE.SphereGeometry(2.8, 48, 48);
-const discoBallMat = new THREE.MeshStandardMaterial({
-  color: 0x222222,
-  metalness: 0.9,
-  roughness: 0.3,
-});
-const discoBall = new THREE.Mesh(discoBallGeo, discoBallMat);
-discoBallGroup.add(discoBall);
+          <div class="input-footer">
+            <div class="upload-group">
+              <input id="audioFile" type="file" accept=".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm,.ogg" class="hidden" />
+              <button id="pickAudioBtn" class="btn secondary" type="button">Upload audio</button>
+              <button id="transcribeOnlyBtn" class="btn ghost hidden" type="button">Transcribe only</button>
+              <div id="audioMeta" class="file-meta">No audio selected.</div>
+            </div>
 
-// Gridded mirror facets — proper rows and columns on the sphere
-const ballRadius = 2.88;
-const rows = 22;
-for (let row = 1; row < rows; row++) {
-  const phi = (row / rows) * Math.PI;
-  const y = Math.cos(phi) * ballRadius;
-  const ringRadius = Math.sin(phi) * ballRadius;
-  const circumference = 2 * Math.PI * ringRadius;
-  const cols = Math.max(6, Math.floor(circumference / 0.42));
-  for (let col = 0; col < cols; col++) {
-    const theta = (col / cols) * Math.PI * 2;
-    const facetW = (circumference / cols) * 0.88;
-    const facetH = (Math.PI * ballRadius / rows) * 0.85;
-    const facetGeo = new THREE.PlaneGeometry(facetW, facetH);
-    const tint = (row + col) % 3;
-    const colors = [0xffffff, 0xddeeff, 0xeeeeff];
-    const facetMat = new THREE.MeshStandardMaterial({
-      color: colors[tint],
-      metalness: 1.0,
-      roughness: 0.02,
-      emissive: colors[tint],
-      emissiveIntensity: 0.08,
-    });
-    const facet = new THREE.Mesh(facetGeo, facetMat);
-    facet.position.set(
-      ringRadius * Math.cos(theta),
-      y,
-      ringRadius * Math.sin(theta)
-    );
-    facet.lookAt(0, 0, 0);
-    facet.rotation.y += Math.PI;
-    discoBallGroup.add(facet);
-  }
-}
+            <div class="action-group">
+              <button id="sampleBtn" class="btn ghost" type="button">Load sample</button>
+              <button id="analyzeBtn" class="btn primary" type="button">Analyze</button>
+            </div>
+          </div>
+        </div>
 
-// Glint cap on top
-const capGeo = new THREE.SphereGeometry(0.5, 12, 6, 0, Math.PI*2, 0, 0.5);
-const capMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: 0, emissive: 0x444444 });
-const cap = new THREE.Mesh(capGeo, capMat);
-cap.position.y = 2.6;
-discoBallGroup.add(cap);
 
-scene.add(discoBallGroup);
+        <div id="errorBox" class="error hidden"></div>
+      </div>
+    </section>
 
-// Disco ball string
-const stringGeo = new THREE.CylinderGeometry(0.06, 0.06, 8, 6);
-const stringMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.2 });
-const string = new THREE.Mesh(stringGeo, stringMat);
-string.position.set(0, 20, 0);
-scene.add(string);
+    <section id="processingState" class="state hidden">
+      <div class="processing-card panel">
+        <div class="processing-top">
+          <div class="orb-shell">
+            <div class="orb"></div>
+          </div>
+        </div>
+        <h2 id="processingTitle">Analyzing</h2>
+        <p id="processingText" class="processing-copy">Checking claims, wording, and evidence signals.</p>
 
-// ---- LIGHT BEAMS radiating from disco ball ----
-const beamCount = 12;
-const beams = [];
-const beamColors = [0xff0055, 0x00ffcc, 0xffcc00, 0xff00ff, 0x0088ff, 0xff6600,
-                    0xff3399, 0x44ff88, 0xffaa00, 0x00aaff, 0xff2266, 0xaaff00];
-for (let i = 0; i < beamCount; i++) {
-  const beamGeo = new THREE.CylinderGeometry(0.03, 0.15, 18, 6);
-  const beamMat = new THREE.MeshBasicMaterial({
-    color: beamColors[i % beamColors.length],
-    transparent: true,
-    opacity: 0.25,
-  });
-  const beam = new THREE.Mesh(beamGeo, beamMat);
-  beam.position.set(0, 16, 0);
-  const angle = (i / beamCount) * Math.PI * 2;
-  beam.rotation.z = Math.PI / 4 + (Math.random() - 0.5) * 0.3;
-  beam.rotation.y = angle;
-  beam.userData.baseAngle = angle;
-  beam.userData.tilt = beam.rotation.z;
-  beam.userData.colorIndex = i % beamColors.length;
-  scene.add(beam);
-  beams.push(beam);
-}
+        <div class="processing-meta">
+          <div class="pill" id="elapsedTimer">00:00</div>
+          <div class="pill" id="processingStage">Starting...</div>
+        </div>
 
-// Sparkle particles orbiting the ball
-const sparkleCount = 60;
-const sparkleGeo = new THREE.BufferGeometry();
-const sparklePositions = new Float32Array(sparkleCount * 3);
-for (let i = 0; i < sparkleCount; i++) {
-  const phi = Math.acos(2 * Math.random() - 1);
-  const theta = Math.random() * Math.PI * 2;
-  const r = 3.5 + Math.random() * 2;
-  sparklePositions[i*3] = r * Math.sin(phi) * Math.cos(theta);
-  sparklePositions[i*3+1] = r * Math.cos(phi) + 16;
-  sparklePositions[i*3+2] = r * Math.sin(phi) * Math.sin(theta);
-}
-sparkleGeo.setAttribute('position', new THREE.BufferAttribute(sparklePositions, 3));
-const sparkleMat = new THREE.PointsMaterial({
-  color: 0xffffff,
-  size: 0.3,
-  transparent: true,
-  opacity: 0.7,
-  sizeAttenuation: true,
-});
-const sparkles = new THREE.Points(sparkleGeo, sparkleMat);
-scene.add(sparkles);
+        <div id="stageLog" class="stage-log"></div>
+      </div>
+    </section>
 
-// ---- LIGHTS ----
-const ambientLight = new THREE.AmbientLight(0x1a0033, 0.4);
-scene.add(ambientLight);
+    <section id="resultsState" class="state hidden">
+      <div class="results-shell">
+        <div class="results-topbar">
+          <div class="results-title">
+            <div class="logo">∴</div>
+            <div>
+              <h2>SignalCheck report</h2>
+              <div id="resultsMeta" class="results-note">Report ready.</div>
+            </div>
+          </div>
 
-const discoLights = [];
-const lightColors = [0xff0055, 0x00ffcc, 0xffcc00, 0xff00ff, 0x0088ff, 0xff6600];
-for (let i = 0; i < 6; i++) {
-  const angle = (i / 6) * Math.PI * 2;
-  const light = new THREE.SpotLight(lightColors[i], 2, 40, Math.PI / 6, 0.5, 1);
-  light.position.set(Math.cos(angle) * 12, 14, Math.sin(angle) * 12);
-  light.target.position.set(0, 0, 0);
-  light.castShadow = true;
-  light.shadow.mapSize.width = 512;
-  light.shadow.mapSize.height = 512;
-  scene.add(light);
-  scene.add(light.target);
-  discoLights.push(light);
-}
+          <div class="top-actions">
+            <button id="newAnalysisBtn" class="btn ghost" type="button">New</button>
+            <button id="copySummaryBtn" class="btn ghost" type="button">Copy summary</button>
+            <button id="exportPdfBtn" class="btn ghost" type="button">Export PDF</button>
+            <button id="copyReportBtn" class="btn ghost" type="button">Copy JSON</button>
+            <button id="downloadReportBtn" class="btn ghost" type="button">Download JSON</button>
+            <button id="downloadMarkdownBtn" class="btn ghost" type="button">Download Markdown</button>
+          </div>
+        </div>
 
-// Point light under disco ball
-const discoPoint = new THREE.PointLight(0xffffff, 1.5, 35);
-discoPoint.position.set(0, 14, 0);
-scene.add(discoPoint);
+        <article class="report-card panel">
+          <div class="report-header">
+            <div>
+              <div id="reportBadge" class="verdict hidden">Mixed</div>
+              <h3>Credibility report</h3>
+            </div>
 
-// Extra light right at ball center for facet reflections
-const ballCenterLight = new THREE.PointLight(0xffffff, 0.8, 10);
-ballCenterLight.position.set(0, 16, 0);
-scene.add(ballCenterLight);
+            <div class="metric-row">
+              <div class="metric">
+                <div class="k">Confidence</div>
+                <div id="metricConfidence" class="v">0%</div>
+              </div>
+              <div class="metric">
+                <div class="k">Risk score</div>
+                <div id="metricRisk" class="v">0</div>
+              </div>
+              <div class="metric">
+                <div class="k">Claims</div>
+                <div id="metricClaims" class="v">0</div>
+              </div>
+            </div>
+          </div>
 
-// ---- DUCK CREATION ----
-const ducks = [];
-const HAT_COLORS = [0xff0055, 0x00ffcc, 0xffcc00, 0xff00ff, 0x0088ff, 0x44ff00, 0xff6600, 0xff3399];
-const DUCK_YELLOWS = [0xffdd00, 0xffe033, 0xffc800, 0xffee44, 0xffd700];
+          <div class="section-block">
+            <div class="section-head">Bottom line</div>
+            <div id="summaryBox" class="summary-box">No report yet.</div>
+          </div>
 
-function createDuck(x, z) {
-  const group = new THREE.Group();
-  const duckYellow = DUCK_YELLOWS[Math.floor(Math.random() * DUCK_YELLOWS.length)];
-  const bodyMat = new THREE.MeshStandardMaterial({
-    color: duckYellow,
-    roughness: 0.35,
-    metalness: 0.05,
-  });
+          <div class="section-block">
+            <div class="section-head">Plain-English rewrite</div>
+            <div id="rewriteBox" class="summary-box">No rewrite yet.</div>
+          </div>
 
-  // Body - a squat sphere
-  const bodyGeo = new THREE.SphereGeometry(1, 24, 18);
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
-  body.scale.set(1, 0.8, 1.1);
-  body.position.y = 1;
-  body.castShadow = true;
-  group.add(body);
+          <div class="section-block flag-grid">
+            <div class="flag-card green">
+              <h4>Green flags</h4>
+              <div id="greenFlags" class="list-grid"></div>
+            </div>
+            <div class="flag-card red">
+              <h4>Red flags</h4>
+              <div id="redFlags" class="list-grid"></div>
+            </div>
+          </div>
 
-  // Head
-  const headGeo = new THREE.SphereGeometry(0.6, 20, 16);
-  const head = new THREE.Mesh(headGeo, bodyMat);
-  head.position.set(0, 2, 0.35);
-  head.castShadow = true;
-  group.add(head);
+          <div class="section-block">
+            <div class="section-head">Key claims</div>
+            <details class="detail-block">
+              <summary class="detail-summary">Show key claims</summary>
+              <div class="detail-inner">
+                <div id="keyClaims" class="list-grid"></div>
+              </div>
+            </details>
+          </div>
 
-  // Beak (orange cone)
-  const beakGeo = new THREE.ConeGeometry(0.2, 0.5, 8);
-  const beakMat = new THREE.MeshStandardMaterial({ color: 0xff8800, roughness: 0.4 });
-  const beak = new THREE.Mesh(beakGeo, beakMat);
-  beak.rotation.x = -Math.PI / 2;
-  beak.position.set(0, 1.95, 0.95);
-  group.add(beak);
+          <div class="section-block">
+            <div class="section-head">Claim-by-claim assessment</div>
+            <details class="detail-block">
+              <summary class="detail-summary">Show claim breakdown</summary>
+              <div class="detail-inner">
+                <div id="claimAssessments" class="list-grid"></div>
+              </div>
+            </details>
+          </div>
 
-  // Googly eyes
-  const eyeWhiteGeo = new THREE.SphereGeometry(0.18, 12, 12);
-  const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
-  const eyePupilGeo = new THREE.SphereGeometry(0.1, 10, 10);
-  const eyePupilMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
+          <div class="section-block">
+            <div class="section-head">Jargon or weasel wording</div>
+            <details class="detail-block">
+              <summary class="detail-summary">Show jargon notes</summary>
+              <div class="detail-inner">
+                <div id="jargonTerms" class="list-grid"></div>
+              </div>
+            </details>
+          </div>
 
-  for (let side = -1; side <= 1; side += 2) {
-    const eyeWhite = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat);
-    eyeWhite.position.set(side * 0.25, 2.15, 0.75);
-    group.add(eyeWhite);
+          <div class="section-block">
+            <div class="section-head">What to ask next</div>
+            <div id="questionsList" class="list-grid"></div>
+          </div>
+        </article>
 
-    const eyePupil = new THREE.Mesh(eyePupilGeo, eyePupilMat);
-    eyePupil.position.set(side * 0.25, 2.15, 0.88);
-    group.add(eyePupil);
-    // Store pupil reference for animation
-    group.userData['pupil' + (side > 0 ? 'R' : 'L')] = eyePupil;
-    group.userData['eyeCenter' + (side > 0 ? 'R' : 'L')] = eyeWhite.position.clone();
-  }
+        <article class="source-card panel">
+          <div class="section-head">Source</div>
+          <div id="sourceMeta" class="results-note">Nothing loaded.</div>
 
-  // Tiny party hat!
-  const hatColor = HAT_COLORS[Math.floor(Math.random() * HAT_COLORS.length)];
-  const hatGeo = new THREE.ConeGeometry(0.35, 0.7, 8);
-  const hatMat = new THREE.MeshStandardMaterial({
-    color: hatColor,
-    roughness: 0.3,
-    metalness: 0.3,
-    emissive: new THREE.Color(hatColor).multiplyScalar(0.15),
-  });
-  const hat = new THREE.Mesh(hatGeo, hatMat);
-  hat.position.set(0, 2.7, 0.3);
-  hat.rotation.z = (Math.random() - 0.5) * 0.5;
-  group.add(hat);
+          <details id="sourceDetails" open>
+            <summary class="source-summary">Source transcript</summary>
+            <div id="transcriptPreview" class="transcript">Nothing loaded yet.</div>
+          </details>
+        </article>
+      </div>
+    </section>
+  </div>
 
-  // Pom pom on hat
-  const pomGeo = new THREE.SphereGeometry(0.12, 8, 8);
-  const pomMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
-  const pom = new THREE.Mesh(pomGeo, pomMat);
-  pom.position.set(hat.position.x, hat.position.y + 0.35, hat.position.z);
-  group.add(pom);
+  <script>
+    const STORAGE_KEY = "signalcheck_saved_api_key";
+    const STORAGE_FLAG = "signalcheck_remember_key";
+    const STORAGE_LAST_TEXT = "signalcheck_last_transcript";
+    const STORAGE_CONTEXT = "signalcheck_additional_context";
 
-  // Tail feather (tiny)
-  const tailGeo = new THREE.ConeGeometry(0.15, 0.3, 6);
-  const tail = new THREE.Mesh(tailGeo, bodyMat);
-  tail.position.set(0, 1.5, -1.0);
-  tail.rotation.x = 0.4;
-  group.add(tail);
+    const SAMPLE_TEXT = "We're deploying a revolutionary AI-native enterprise intelligence layer that leverages autonomous reasoning, multi-agent orchestration, and blockchain-grade trust primitives to deliver 10x operational uplift across the whole organization. The platform basically understands every workflow instantly, eliminates friction, and gives leadership complete visibility in real time. We've already seen enormous interest from major players and we're confident this is category-defining. The exact technical details are proprietary, but the architecture is incredibly robust and infinitely scalable.";
 
-  group.position.set(x, 0, z);
+    const SYSTEM_PROMPT = "You are SignalCheck, a professional credibility analyst.\n\nYour job is to examine a transcript or statement and assess whether it contains unsupported claims, vague promises, technical jargon used to hide weak reasoning, contradictions, overconfidence, or hype.\n\nImportant behavior rules:\n- Be fair, not cynical.\n- Do not claim something is false unless the text itself gives a reason to doubt it.\n- If evidence is missing, say the evidence is missing.\n- Distinguish between: credible, mixed, questionable, and likely_bullshit.\n- Explain suspicious wording in plain English.\n- Focus on what is actually in the provided text. Do not invent outside facts.\n- If a claim might be true but is unsupported, mark it as unverified rather than false.\n- If there are valid, grounded parts, include them.\n\nReturn only the JSON requested by the schema.";
 
-  // Dance properties
-  group.userData.danceSpeed = 1.5 + Math.random() * 2;
-  group.userData.danceStyle = Math.floor(Math.random() * 5);
-  group.userData.dancePhase = Math.random() * Math.PI * 2;
-  group.userData.bounceHeight = 0.3 + Math.random() * 0.7;
-  group.userData.spinSpeed = (Math.random() - 0.5) * 4;
-  group.userData.wobbleAmount = 0.1 + Math.random() * 0.3;
-  group.userData.vx = (Math.random() - 0.5) * 0.04;
-  group.userData.vz = (Math.random() - 0.5) * 0.04;
-  group.userData.panicMode = false;
-  group.userData.head = head;
-  group.userData.body = body;
+    const REPORT_SCHEMA = {
+      type: "object",
+      additionalProperties: false,
+      required: [
+        "verdict",
+        "summary",
+        "confidence",
+        "risk_score",
+        "green_flags",
+        "red_flags",
+        "key_claims",
+        "claim_assessments",
+        "jargon_terms",
+        "questions_to_ask_next",
+        "plain_english_rewrite"
+      ],
+      properties: {
+        verdict: {
+          type: "string",
+          enum: ["credible", "mixed", "questionable", "likely_bullshit"]
+        },
+        summary: { type: "string" },
+        confidence: { type: "integer", minimum: 0, maximum: 100 },
+        risk_score: { type: "integer", minimum: 0, maximum: 100 },
+        green_flags: {
+          type: "array",
+          items: { type: "string" },
+          maxItems: 6
+        },
+        red_flags: {
+          type: "array",
+          items: { type: "string" },
+          maxItems: 8
+        },
+        key_claims: {
+          type: "array",
+          items: { type: "string" },
+          maxItems: 8
+        },
+        claim_assessments: {
+          type: "array",
+          maxItems: 8,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["claim", "assessment", "reason", "evidence_gap"],
+            properties: {
+              claim: { type: "string" },
+              assessment: {
+                type: "string",
+                enum: ["supported", "partially_supported", "unverified", "suspicious"]
+              },
+              reason: { type: "string" },
+              evidence_gap: { type: "string" }
+            }
+          }
+        },
+        jargon_terms: {
+          type: "array",
+          maxItems: 8,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["term", "why_it_is_suspicious", "plain_english"],
+            properties: {
+              term: { type: "string" },
+              why_it_is_suspicious: { type: "string" },
+              plain_english: { type: "string" }
+            }
+          }
+        },
+        questions_to_ask_next: {
+          type: "array",
+          items: { type: "string" },
+          maxItems: 8
+        },
+        plain_english_rewrite: { type: "string" }
+      }
+    };
 
-  scene.add(group);
-  ducks.push(group);
-  updateDuckCount();
-  return group;
-}
+    const els = {
+      composeState: document.getElementById("composeState"),
+      processingState: document.getElementById("processingState"),
+      resultsState: document.getElementById("resultsState"),
+      toggleAdvancedBtn: document.getElementById("toggleAdvancedBtn"),
+      advancedPanel: document.getElementById("advancedPanel"),
+      apiKey: document.getElementById("apiKey"),
+      analysisModel: document.getElementById("analysisModel"),
+      reasoningEffort: document.getElementById("reasoningEffort"),
+      audioModel: document.getElementById("audioModel"),
+      additionalContext: document.getElementById("additionalContext"),
+      rememberKey: document.getElementById("rememberKey"),
+      transcriptInput: document.getElementById("transcriptInput"),
+      pickAudioBtn: document.getElementById("pickAudioBtn"),
+      audioFile: document.getElementById("audioFile"),
+      audioMeta: document.getElementById("audioMeta"),
+      transcribeOnlyBtn: document.getElementById("transcribeOnlyBtn"),
+      analyzeBtn: document.getElementById("analyzeBtn"),
+      sampleBtn: document.getElementById("sampleBtn"),
+      clearAllBtn: document.getElementById("clearAllBtn"),
+      errorBox: document.getElementById("errorBox"),
+      processingTitle: document.getElementById("processingTitle"),
+      processingText: document.getElementById("processingText"),
+      elapsedTimer: document.getElementById("elapsedTimer"),
+      processingStage: document.getElementById("processingStage"),
+      stageLog: document.getElementById("stageLog"),
+      resultsMeta: document.getElementById("resultsMeta"),
+      reportBadge: document.getElementById("reportBadge"),
+      metricConfidence: document.getElementById("metricConfidence"),
+      metricRisk: document.getElementById("metricRisk"),
+      metricClaims: document.getElementById("metricClaims"),
+      summaryBox: document.getElementById("summaryBox"),
+      rewriteBox: document.getElementById("rewriteBox"),
+      greenFlags: document.getElementById("greenFlags"),
+      redFlags: document.getElementById("redFlags"),
+      keyClaims: document.getElementById("keyClaims"),
+      claimAssessments: document.getElementById("claimAssessments"),
+      jargonTerms: document.getElementById("jargonTerms"),
+      questionsList: document.getElementById("questionsList"),
+      sourceMeta: document.getElementById("sourceMeta"),
+      transcriptPreview: document.getElementById("transcriptPreview"),
+      sourceDetails: document.getElementById("sourceDetails"),
+      newAnalysisBtn: document.getElementById("newAnalysisBtn"),
+      copySummaryBtn: document.getElementById("copySummaryBtn"),
+      exportPdfBtn: document.getElementById("exportPdfBtn"),
+      copyReportBtn: document.getElementById("copyReportBtn"),
+      downloadReportBtn: document.getElementById("downloadReportBtn"),
+      downloadMarkdownBtn: document.getElementById("downloadMarkdownBtn")
+    };
 
-function updateDuckCount() {
-  document.getElementById('duck-count').textContent = `🦆 × ${ducks.length}`;
-}
+    let lastReport = null;
+    let lastTranscript = "";
+    let processingTimer = null;
+    let processingStart = 0;
+    let audioSelected = null;
 
-// Spawn initial ducks
-for (let i = 0; i < 8; i++) {
-  createDuck(
-    (Math.random() - 0.5) * 14,
-    (Math.random() - 0.5) * 14
-  );
-}
+    init();
 
-// ---- INTERACTION ----
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
+    function init() {
+      const remember = localStorage.getItem(STORAGE_FLAG) === "1";
+      els.rememberKey.checked = remember;
 
-window.addEventListener('click', (e) => {
-  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      if (remember) {
+        const savedKey = localStorage.getItem(STORAGE_KEY);
+        if (savedKey) els.apiKey.value = savedKey;
+      }
 
-  raycaster.setFromCamera(mouse, camera);
-  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-  const intersection = new THREE.Vector3();
-  raycaster.ray.intersectPlane(plane, intersection);
+      const savedText = localStorage.getItem(STORAGE_LAST_TEXT) || "";
+      const savedContext = localStorage.getItem(STORAGE_CONTEXT) || "";
+      els.transcriptInput.value = savedText;
+      autoGrowTextarea(els.transcriptInput);
+      els.additionalContext.value = savedContext;
+      lastTranscript = savedText;
 
-  if (intersection) {
-    const clampedX = Math.max(-16, Math.min(16, intersection.x));
-    const clampedZ = Math.max(-16, Math.min(16, intersection.z));
-    createDuck(clampedX, clampedZ);
-
-    // Quack popup!
-    const quack = document.createElement('div');
-    quack.className = 'quack-popup';
-    quack.textContent = ['QUACK!', '🦆', 'HONK!', 'quack~', '🪩', 'GROOVE!', 'WADDLE!'][Math.floor(Math.random() * 7)];
-    quack.style.left = e.clientX + 'px';
-    quack.style.top = e.clientY + 'px';
-    document.body.appendChild(quack);
-    setTimeout(() => quack.remove(), 1200);
-  }
-});
-
-// Panic button
-let panicMode = false;
-document.getElementById('panic-btn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  panicMode = !panicMode;
-  document.getElementById('panic-btn').textContent = panicMode ? '🕊️ CALM DOWN' : '🚨 DUCK PANIC';
-  document.getElementById('vibe-label').textContent = panicMode ? '↑ zen mode' : '↑ chaos mode';
-});
-
-// ---- ANIMATION ----
-const clock = new THREE.Clock();
-let time = 0;
-
-function animateDuck(duck, t) {
-  const d = duck.userData;
-  const phase = t * d.danceSpeed + d.dancePhase;
-  const panic = panicMode ? 3.0 : 1.0;
-
-  // Different dance styles
-  switch (d.danceStyle) {
-    case 0: // Bouncy boi
-      duck.position.y = Math.abs(Math.sin(phase * panic)) * d.bounceHeight * panic;
-      duck.rotation.y += d.spinSpeed * 0.02 * panic;
-      duck.rotation.z = Math.sin(phase * 2) * d.wobbleAmount;
-      break;
-    case 1: // Side-to-side swagger
-      duck.position.y = Math.abs(Math.sin(phase * 2 * panic)) * 0.3;
-      duck.position.x += Math.sin(phase * panic) * 0.02;
-      duck.rotation.z = Math.sin(phase * panic) * 0.3;
-      duck.rotation.y += 0.005 * panic;
-      break;
-    case 2: // Headbanger
-      duck.position.y = Math.abs(Math.sin(phase * 3 * panic)) * 0.2;
-      if (d.head) d.head.rotation.x = Math.sin(phase * 3 * panic) * 0.5;
-      duck.rotation.y += d.spinSpeed * 0.01;
-      break;
-    case 3: // Spinning top
-      duck.rotation.y += 0.08 * panic;
-      duck.position.y = (Math.sin(phase * panic) * 0.5 + 0.5) * d.bounceHeight * panic;
-      duck.scale.setScalar(1 + Math.sin(phase * 2) * 0.05 * panic);
-      break;
-    case 4: // The Wiggle
-      duck.position.y = Math.abs(Math.sin(phase * panic)) * 0.4;
-      duck.rotation.x = Math.sin(phase * 2 * panic) * 0.15;
-      duck.rotation.z = Math.cos(phase * 2.5 * panic) * 0.2;
-      if (d.body) d.body.scale.x = 1 + Math.sin(phase * 4 * panic) * 0.08;
-      break;
-  }
-
-  // Drift around
-  duck.position.x += d.vx * panic;
-  duck.position.z += d.vz * panic;
-
-  // Bounce off walls
-  if (Math.abs(duck.position.x) > 16) { d.vx *= -1; duck.position.x = Math.sign(duck.position.x) * 16; }
-  if (Math.abs(duck.position.z) > 16) { d.vz *= -1; duck.position.z = Math.sign(duck.position.z) * 16; }
-
-  // Occasionally change direction
-  if (Math.random() < 0.002 * panic) {
-    d.vx += (Math.random() - 0.5) * 0.02;
-    d.vz += (Math.random() - 0.5) * 0.02;
-    d.vx = Math.max(-0.08, Math.min(0.08, d.vx));
-    d.vz = Math.max(-0.08, Math.min(0.08, d.vz));
-  }
-
-  // Googly eyes - pupils jiggle
-  const jiggle = panicMode ? 0.08 : 0.04;
-  ['pupilR', 'pupilL'].forEach(key => {
-    const pupil = d[key];
-    const center = d[key.replace('pupil', 'eyeCenter')];
-    if (pupil && center) {
-      pupil.position.x = center.x + Math.sin(t * 7 + d.dancePhase) * jiggle;
-      pupil.position.y = center.y + Math.cos(t * 5 + d.dancePhase) * jiggle;
+      updateAudioMeta();
+      updateAnalyzeButton();
+      bindEvents();
+      renderEmptyResults();
     }
-  });
-}
 
-function animateFloor(t) {
-  const speed = panicMode ? 4.0 : 1.5;
-  tileMeshes.forEach(tile => {
-    const { gx, gz } = tile.userData;
-    const wave = Math.sin(gx * 0.8 + t * speed) * Math.cos(gz * 0.8 + t * speed * 0.7);
-    const colorIndex = Math.floor((wave + 1) * 3) % 6;
-    const intensity = (wave + 1) / 2;
-
-    const color = new THREE.Color(lightColors[colorIndex]);
-    tile.material.emissive.copy(color).multiplyScalar(intensity * (panicMode ? 0.6 : 0.3));
-
-    // Floor tiles pulse up slightly
-    tile.position.y = -0.15 + intensity * (panicMode ? 0.15 : 0.05);
-  });
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-  const dt = clock.getDelta();
-  time += dt;
-
-  // Rotate disco ball group
-  discoBallGroup.rotation.y += (panicMode ? 0.06 : 0.015);
-  // Gentle wobble
-  discoBallGroup.rotation.x = Math.sin(time * 0.3) * 0.05;
-  discoBallGroup.rotation.z = Math.cos(time * 0.25) * 0.05;
-
-  // Animate light beams
-  beams.forEach((beam, i) => {
-    const speed = panicMode ? 3 : 1;
-    beam.rotation.y = beam.userData.baseAngle + time * speed * 0.4;
-    beam.rotation.z = beam.userData.tilt + Math.sin(time * speed * 0.7 + i) * 0.3;
-    beam.material.opacity = 0.15 + Math.sin(time * speed * 2 + i * 1.5) * 0.15;
-    if (panicMode) {
-      const hue = ((time * 0.4 + i * 0.08) % 1);
-      beam.material.color.setHSL(hue, 1, 0.5);
-    } else {
-      beam.material.color.setHex(beamColors[beam.userData.colorIndex]);
+    function bindEvents() {
+      els.toggleAdvancedBtn.addEventListener("click", toggleAdvanced);
+      els.rememberKey.addEventListener("change", onRememberKeyChange);
+      els.apiKey.addEventListener("input", onApiKeyInput);
+      els.additionalContext.addEventListener("input", () => {
+        localStorage.setItem(STORAGE_CONTEXT, els.additionalContext.value);
+      });
+      els.transcriptInput.addEventListener("input", () => {
+        persistTranscript(els.transcriptInput.value);
+        autoGrowTextarea(els.transcriptInput);
+        updateAnalyzeButton();
+      });
+      els.pickAudioBtn.addEventListener("click", () => els.audioFile.click());
+      els.audioFile.addEventListener("change", onAudioSelected);
+      els.transcribeOnlyBtn.addEventListener("click", onTranscribeOnly);
+      els.analyzeBtn.addEventListener("click", onAnalyzePrimary);
+      els.sampleBtn.addEventListener("click", () => {
+        els.transcriptInput.value = SAMPLE_TEXT;
+        persistTranscript(SAMPLE_TEXT);
+        autoGrowTextarea(els.transcriptInput);
+        hideError();
+        updateAnalyzeButton();
+      });
+      els.clearAllBtn.addEventListener("click", clearAllData);
+      els.newAnalysisBtn.addEventListener("click", () => {
+        hideError();
+        showState("compose");
+      });
+      els.copySummaryBtn.addEventListener("click", copySummary);
+      els.exportPdfBtn.addEventListener("click", exportPdf);
+      els.copyReportBtn.addEventListener("click", copyReportJson);
+      els.downloadReportBtn.addEventListener("click", downloadReportJson);
+      els.downloadMarkdownBtn.addEventListener("click", downloadReportMarkdown);
     }
-  });
 
-  // Animate sparkle particles
-  const sPos = sparkles.geometry.attributes.position.array;
-  for (let i = 0; i < sparkleCount; i++) {
-    const baseX = sPos[i*3];
-    const baseZ = sPos[i*3+2];
-    const angle = time * (panicMode ? 1.5 : 0.4) + i * 0.5;
-    const r = Math.sqrt(baseX*baseX + baseZ*baseZ);
-    sPos[i*3] = Math.cos(angle + i) * r;
-    sPos[i*3+2] = Math.sin(angle + i) * r;
-  }
-  sparkles.geometry.attributes.position.needsUpdate = true;
-  sparkleMat.opacity = 0.4 + Math.sin(time * 3) * 0.3;
-
-  // Animate disco lights
-  discoLights.forEach((light, i) => {
-    const speed = panicMode ? 3 : 1;
-    const angle = (i / 6) * Math.PI * 2 + time * speed * 0.5;
-    light.position.x = Math.cos(angle) * 12;
-    light.position.z = Math.sin(angle) * 12;
-    light.target.position.x = Math.sin(time * speed + i) * 6;
-    light.target.position.z = Math.cos(time * speed + i * 1.3) * 6;
-    light.intensity = 1.5 + Math.sin(time * speed * 3 + i * 2) * 1.0;
-
-    // Color cycling in panic mode
-    if (panicMode) {
-      const hue = ((time * 0.3 + i * 0.15) % 1);
-      light.color.setHSL(hue, 1, 0.5);
-    } else {
-      light.color.setHex(lightColors[i]);
+    function toggleAdvanced() {
+      const isOpen = els.advancedPanel.classList.contains("open");
+      els.advancedPanel.classList.toggle("open", !isOpen);
+      els.toggleAdvancedBtn.classList.toggle("open", !isOpen);
+      els.toggleAdvancedBtn.setAttribute("aria-expanded", String(!isOpen));
     }
-  });
 
-  // Disco ball point light pulses
-  discoPoint.intensity = 1.2 + Math.sin(time * (panicMode ? 8 : 3)) * 0.6;
-  ballCenterLight.intensity = 0.5 + Math.sin(time * (panicMode ? 6 : 2)) * 0.4;
-  if (panicMode) {
-    discoPoint.color.setHSL((time * 0.5) % 1, 1, 0.6);
-    ballCenterLight.color.setHSL((time * 0.7) % 1, 0.8, 0.7);
-  }
+    function onRememberKeyChange() {
+      localStorage.setItem(STORAGE_FLAG, els.rememberKey.checked ? "1" : "0");
+      if (!els.rememberKey.checked) {
+        localStorage.removeItem(STORAGE_KEY);
+      } else if (els.apiKey.value.trim()) {
+        localStorage.setItem(STORAGE_KEY, els.apiKey.value.trim());
+      }
+    }
 
-  // Camera gentle sway
-  const camSway = panicMode ? 2.5 : 0.8;
-  camera.position.x = Math.sin(time * 0.2) * camSway;
-  camera.position.z = 28 + Math.cos(time * 0.15) * camSway;
-  camera.lookAt(0, 3, 0);
+    function onApiKeyInput() {
+      if (els.rememberKey.checked) {
+        localStorage.setItem(STORAGE_KEY, els.apiKey.value.trim());
+      }
+    }
 
-  // Animate ducks
-  ducks.forEach(duck => animateDuck(duck, time));
 
-  // Animate floor
-  animateFloor(time);
+    function autoGrowTextarea(el) {
+      if (!el) return;
+      el.style.height = "auto";
+      const max = 240;
+      const next = Math.min(el.scrollHeight, max);
+      el.style.height = next + "px";
+    }
 
-  renderer.render(scene, camera);
-}
+    function persistTranscript(value) {
+      lastTranscript = value;
+      localStorage.setItem(STORAGE_LAST_TEXT, value);
+    }
 
-animate();
+    function clearAllData() {
+      els.transcriptInput.value = "";
+      els.additionalContext.value = "";
+      els.audioFile.value = "";
+      audioSelected = null;
+      lastTranscript = "";
+      lastReport = null;
+      localStorage.removeItem(STORAGE_LAST_TEXT);
+      localStorage.removeItem(STORAGE_CONTEXT);
+      if (!els.rememberKey.checked) {
+        els.apiKey.value = "";
+      }
+      updateAudioMeta();
+      updateAnalyzeButton();
+      hideError();
+      renderEmptyResults();
+      showState("compose");
+    }
 
-// ---- RESIZE ----
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-</script>
+    function showState(name) {
+      els.composeState.classList.toggle("hidden", name !== "compose");
+      els.processingState.classList.toggle("hidden", name !== "processing");
+      els.resultsState.classList.toggle("hidden", name !== "results");
+      if (name === "results") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+
+    function requireApiKey() {
+      const raw = els.apiKey.value.trim();
+      if (!raw) {
+        throw new Error("Paste an OpenAI API key in Advanced settings first.");
+      }
+      const key = sanitizeHeaderValue("API key", raw);
+      if (els.rememberKey.checked) {
+        localStorage.setItem(STORAGE_KEY, key);
+      }
+      return key;
+    }
+
+    function sanitizeHeaderValue(label, value) {
+      const normalized = value.normalize("NFKC").trim();
+      for (let i = 0; i < normalized.length; i += 1) {
+        if (normalized.charCodeAt(i) > 255) {
+          throw new Error(label + " contains unsupported characters. Re-paste it as plain text.");
+        }
+      }
+      return normalized;
+    }
+
+    function onAudioSelected() {
+      audioSelected = els.audioFile.files && els.audioFile.files[0] ? els.audioFile.files[0] : null;
+      updateAudioMeta();
+      updateAnalyzeButton();
+      hideError();
+    }
+
+    function updateAudioMeta() {
+      if (audioSelected) {
+        const sizeMb = (audioSelected.size / (1024 * 1024)).toFixed(1);
+        els.audioMeta.textContent = audioSelected.name + " • " + sizeMb + " MB";
+        els.transcribeOnlyBtn.classList.remove("hidden");
+      } else {
+        els.audioMeta.textContent = "No audio selected.";
+        els.transcribeOnlyBtn.classList.add("hidden");
+      }
+    }
+
+    function updateAnalyzeButton() {
+      const hasText = !!els.transcriptInput.value.trim();
+      if (hasText) {
+        els.analyzeBtn.textContent = "Analyze";
+      } else if (audioSelected) {
+        els.analyzeBtn.textContent = "Transcribe + analyze";
+      } else {
+        els.analyzeBtn.textContent = "Analyze";
+      }
+    }
+
+    function hideError() {
+      els.errorBox.classList.add("hidden");
+      els.errorBox.textContent = "";
+    }
+
+    function showError(message) {
+      els.errorBox.textContent = message;
+      els.errorBox.classList.remove("hidden");
+      showState("compose");
+    }
+
+    async function onAnalyzePrimary() {
+      hideError();
+      try {
+        const apiKey = requireApiKey();
+        const text = els.transcriptInput.value.trim();
+
+        if (text) {
+          await runTextAnalysis(apiKey, text);
+          return;
+        }
+
+        if (audioSelected) {
+          await runAudioTranscribeAndAnalyze(apiKey, audioSelected);
+          return;
+        }
+
+        throw new Error("Paste some text or upload an audio file first.");
+      } catch (error) {
+        stopProcessing();
+        showError(normalizeError(error));
+      }
+    }
+
+    async function onTranscribeOnly() {
+      hideError();
+      try {
+        const apiKey = requireApiKey();
+        if (!audioSelected) {
+          throw new Error("Choose an audio file first.");
+        }
+        startProcessing("Transcribing", "Turning your audio into a transcript.", [
+          "Preparing request",
+          "Uploading audio",
+          "Transcribing audio"
+        ]);
+        activateStage(0);
+        const transcript = await transcribeAudio(apiKey, audioSelected);
+        els.transcriptInput.value = transcript;
+        autoGrowTextarea(els.transcriptInput);
+        persistTranscript(transcript);
+        updateAnalyzeButton();
+        stopProcessing();
+        showState("compose");
+      } catch (error) {
+        stopProcessing();
+        showError(normalizeError(error));
+      }
+    }
+
+    async function runTextAnalysis(apiKey, text) {
+      startProcessing("Analyzing", "Checking claims, wording, and evidence signals.", [
+        "Preparing analysis",
+        "Sending transcript",
+        "Evaluating claims",
+        "Building report"
+      ]);
+      activateStage(0);
+      const report = await analyzeText(apiKey, text, false);
+      lastReport = report;
+      persistTranscript(text);
+      stopProcessing();
+      renderReport(report, text);
+      showState("results");
+    }
+
+    async function runAudioTranscribeAndAnalyze(apiKey, file) {
+      startProcessing("Processing audio", "Uploading, transcribing, and analyzing your meeting.", [
+        "Preparing request",
+        "Uploading audio",
+        "Transcribing audio",
+        "Evaluating claims",
+        "Building report"
+      ]);
+      activateStage(0);
+      const transcript = await transcribeAudio(apiKey, file);
+      els.transcriptInput.value = transcript;
+      persistTranscript(transcript);
+      updateAnalyzeButton();
+      const report = await analyzeText(apiKey, transcript, true);
+      lastReport = report;
+      stopProcessing();
+      renderReport(report, transcript);
+      showState("results");
+    }
+
+    function startProcessing(title, text, stages) {
+      els.processingTitle.textContent = title;
+      els.processingText.textContent = text;
+      els.processingStage.textContent = "Starting...";
+      els.stageLog.innerHTML = stages.map((stage, index) => '<div class="stage-item" data-stage-index="' + index + '">' + escapeHtml(stage) + '</div>').join("");
+      processingStart = Date.now();
+      els.elapsedTimer.textContent = "00:00";
+      if (processingTimer) clearInterval(processingTimer);
+      processingTimer = setInterval(updateElapsedTimer, 250);
+      showState("processing");
+    }
+
+    function activateStage(index) {
+      const items = els.stageLog.querySelectorAll(".stage-item");
+      items.forEach((item, itemIndex) => {
+        item.classList.toggle("active", itemIndex === index);
+      });
+      const active = items[index];
+      if (active) {
+        els.processingStage.textContent = active.textContent;
+      }
+    }
+
+    function updateElapsedTimer() {
+      const elapsedMs = Date.now() - processingStart;
+      const seconds = Math.floor(elapsedMs / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const remainder = seconds % 60;
+      els.elapsedTimer.textContent = String(minutes).padStart(2, "0") + ":" + String(remainder).padStart(2, "0");
+    }
+
+    function stopProcessing() {
+      if (processingTimer) {
+        clearInterval(processingTimer);
+        processingTimer = null;
+      }
+    }
+
+    async function transcribeAudio(apiKey, file) {
+      activateStage(1);
+      const form = new FormData();
+      const model = els.audioModel.value;
+      form.append("file", file);
+      form.append("model", model);
+
+      if (model === "gpt-4o-transcribe-diarize") {
+        form.append("response_format", "diarized_json");
+        form.append("chunking", "auto");
+      } else {
+        form.append("response_format", "json");
+      }
+
+      activateStage(2);
+      const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + apiKey
+        },
+        body: form
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(readApiError(data) || "Transcription failed (" + response.status + ").");
+      }
+
+      if (model === "gpt-4o-transcribe-diarize") {
+        return formatDiarizedTranscript(data);
+      }
+
+      if (typeof data?.text === "string") return data.text.trim();
+      if (typeof data === "string") return data.trim();
+      return JSON.stringify(data, null, 2);
+    }
+
+    function formatDiarizedTranscript(data) {
+      if (!data) return "";
+      const segments = Array.isArray(data.segments) ? data.segments : [];
+      if (!segments.length && typeof data.text === "string") return data.text.trim();
+      const lines = [];
+      for (const seg of segments) {
+        const speaker = seg.speaker || seg.speaker_label || seg.spk || "Speaker";
+        const text = seg.text || seg.transcript || "";
+        if (text.trim()) {
+          lines.push(speaker + ": " + text.trim());
+        }
+      }
+      return lines.join("\n");
+    }
+
+    async function analyzeText(apiKey, text, fromAudio) {
+      activateStage(fromAudio ? 3 : 1);
+
+      const context = els.additionalContext.value.trim();
+      const inputText = buildAnalysisInput(text, context);
+
+      const body = {
+        model: els.analysisModel.value,
+        input: [
+          {
+            role: "system",
+            content: [
+              { type: "input_text", text: SYSTEM_PROMPT }
+            ]
+          },
+          {
+            role: "user",
+            content: [
+              { type: "input_text", text: inputText }
+            ]
+          }
+        ],
+        text: {
+          format: {
+            type: "json_schema",
+            name: "signalcheck_report",
+            strict: true,
+            schema: REPORT_SCHEMA
+          }
+        }
+      };
+
+      if (String(els.analysisModel.value).startsWith("gpt-5")) {
+        body.reasoning = { effort: els.reasoningEffort.value };
+      }
+
+      const response = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + apiKey
+        },
+        body: JSON.stringify(body)
+      });
+
+      activateStage(fromAudio ? 4 : 3);
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(readApiError(data) || "Analysis failed (" + response.status + ").");
+      }
+
+      const rawText = extractOutputText(data);
+      if (!rawText) {
+        throw new Error("The model returned an empty response.");
+      }
+
+      try {
+        return JSON.parse(rawText);
+      } catch (error) {
+        throw new Error("The model response was not valid JSON. Try running it again.");
+      }
+    }
+
+    function buildAnalysisInput(text, context) {
+      let built = "Analyse the following transcript or statement.\n\n";
+      if (context) {
+        built += "Additional context:\n" + context + "\n\n";
+      }
+      built += "Transcript:\n" + text;
+      return built;
+    }
+
+    function extractOutputText(data) {
+      if (!data) return "";
+      if (typeof data.output_text === "string" && data.output_text.trim()) {
+        return data.output_text.trim();
+      }
+      if (Array.isArray(data.output)) {
+        for (const item of data.output) {
+          if (!Array.isArray(item.content)) continue;
+          for (const part of item.content) {
+            if (typeof part.text === "string" && part.text.trim()) {
+              return part.text.trim();
+            }
+          }
+        }
+      }
+      return "";
+    }
+
+    function readApiError(data) {
+      return data?.error?.message || data?.message || "";
+    }
+
+    function normalizeError(error) {
+      const message = error?.message || String(error);
+      if (message.includes("Failed to fetch")) {
+        return "Network or browser request failed. If your browser blocks direct API calls from a local file, try another browser or run the same HTML from a tiny local static host.";
+      }
+      return message;
+    }
+
+    function renderEmptyResults() {
+      els.reportBadge.className = "verdict hidden";
+      els.metricConfidence.textContent = "0%";
+      els.metricRisk.textContent = "0";
+      els.metricClaims.textContent = "0";
+      els.summaryBox.textContent = "No report yet.";
+      els.rewriteBox.textContent = "No rewrite yet.";
+      els.greenFlags.innerHTML = emptyItem("No green flags yet.");
+      els.redFlags.innerHTML = emptyItem("No red flags yet.");
+      els.keyClaims.innerHTML = emptyItem("No claims yet.");
+      els.claimAssessments.innerHTML = emptyItem("No assessment yet.");
+      els.jargonTerms.innerHTML = emptyItem("No jargon analysis yet.");
+      els.questionsList.innerHTML = emptyItem("No follow-up questions yet.");
+      els.sourceMeta.textContent = "Nothing loaded.";
+      els.transcriptPreview.textContent = "Nothing loaded yet.";
+    }
+
+    function renderReport(report, transcript) {
+      const verdictClass = report.verdict === "credible"
+        ? "credible"
+        : report.verdict === "mixed"
+        ? "mixed"
+        : report.verdict === "questionable"
+        ? "questionable"
+        : "bs";
+
+      const verdictLabel = report.verdict === "likely_bullshit"
+        ? "Likely bullshit"
+        : capitalize(report.verdict);
+
+      els.reportBadge.className = "verdict " + verdictClass;
+      els.reportBadge.textContent = verdictLabel;
+      els.reportBadge.classList.remove("hidden");
+
+      els.metricConfidence.textContent = safeNum(report.confidence) + "%";
+      els.metricRisk.textContent = safeNum(report.risk_score);
+      els.metricClaims.textContent = String((report.key_claims || []).length);
+
+      els.summaryBox.textContent = report.summary || "";
+      els.rewriteBox.textContent = report.plain_english_rewrite || "";
+
+      els.greenFlags.innerHTML = renderSimpleList(report.green_flags, "No strong grounding or evidence cues were highlighted.");
+      els.redFlags.innerHTML = renderSimpleList(report.red_flags, "No major red flags were highlighted.");
+      els.keyClaims.innerHTML = renderSimpleList(report.key_claims, "No major claims were extracted.");
+      els.questionsList.innerHTML = renderSimpleList(report.questions_to_ask_next, "No follow-up questions were returned.");
+      els.claimAssessments.innerHTML = (report.claim_assessments || []).length
+        ? report.claim_assessments.map(renderClaimAssessment).join("")
+        : emptyItem("No detailed claim assessments were returned.");
+      els.jargonTerms.innerHTML = (report.jargon_terms || []).length
+        ? report.jargon_terms.map(renderJargonItem).join("")
+        : emptyItem("No standout jargon terms were identified.");
+
+      els.sourceMeta.textContent = countWords(transcript) + " words • report generated";
+      els.transcriptPreview.textContent = transcript || "";
+      els.resultsMeta.textContent = "Report ready • " + countWords(transcript) + " words analyzed";
+      els.sourceDetails.open = true;
+    }
+
+    function renderSimpleList(items, fallback) {
+      if (!Array.isArray(items) || !items.length) {
+        return emptyItem(fallback);
+      }
+      return items.map((item) => '<div class="list-item"><p>' + escapeHtml(item) + '</p></div>').join("");
+    }
+
+    function renderClaimAssessment(item) {
+      const tone = item.assessment === "supported"
+        ? "Supported"
+        : item.assessment === "partially_supported"
+        ? "Partially supported"
+        : item.assessment === "unverified"
+        ? "Unverified"
+        : "Suspicious";
+
+      return '<div class="list-item">'
+        + '<h4>' + escapeHtml(item.claim || tone) + '</h4>'
+        + '<p><strong>' + escapeHtml(tone) + '.</strong> ' + escapeHtml(item.reason || "") + '</p>'
+        + '<p style="margin-top:8px;"><span style="color: var(--soft); font-size:12px;">Evidence gap:</span> ' + escapeHtml(item.evidence_gap || "") + '</p>'
+        + '</div>';
+    }
+
+    function renderJargonItem(item) {
+      return '<div class="list-item">'
+        + '<h4>' + escapeHtml(item.term || "") + '</h4>'
+        + '<p>' + escapeHtml(item.why_it_is_suspicious || "") + '</p>'
+        + '<p style="margin-top:8px;"><span style="color: var(--soft); font-size:12px;">Plain English:</span> ' + escapeHtml(item.plain_english || "") + '</p>'
+        + '</div>';
+    }
+
+    function emptyItem(text) {
+      return '<div class="list-item"><p>' + escapeHtml(text) + '</p></div>';
+    }
+
+
+    function buildShareSummary(report, transcript) {
+      const verdict = humanVerdict(report.verdict);
+      const confidence = safeNum(report.confidence);
+      const risk = safeNum(report.risk_score);
+      const summary = (report.summary || "").trim();
+      const questions = (report.questions_to_ask_next || []).slice(0, 5);
+      const qBlock = questions.length
+        ? `
+
+Questions to ask next:
+- ${questions.join('\n- ')}`
+        : "";
+
+      return `SignalCheck
+Verdict: ${verdict} (confidence ${confidence}%)
+Risk score: ${risk}/100
+
+Summary:
+${summary}${qBlock}`;
+    }
+
+    function copySummary() {
+      if (!lastReport) {
+        return showError("No report to copy yet.");
+      }
+      const text = buildShareSummary(lastReport, els.transcriptInput.value.trim());
+      copyToClipboard(text, "Summary copied.");
+    }
+
+    function exportPdf() {
+      if (!lastReport) {
+        return showError("No report to export yet.");
+      }
+      const printable = buildPrintableHtml(lastReport, els.transcriptInput.value.trim());
+      const w = window.open("", "_blank");
+      if (!w) {
+        return showError("Popup blocked. Allow popups to export PDF.");
+      }
+      w.document.open();
+      w.document.write(printable);
+      w.document.close();
+      w.focus();
+      setTimeout(() => {
+        try { w.print(); } catch {}
+      }, 300);
+    }
+
+    function buildPrintableHtml(report, transcript) {
+      const esc = (s) => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      const claims = (report.key_claims || []).map(c => `<li>${esc(c)}</li>`).join("");
+      const greens = (report.green_flags || []).map(c => `<li>${esc(c)}</li>`).join("");
+      const reds = (report.red_flags || []).map(c => `<li>${esc(c)}</li>`).join("");
+      const questions = (report.questions_to_ask_next || []).map(c => `<li>${esc(c)}</li>`).join("");
+      return `<!doctype html><html><head><meta charset="utf-8"><title>SignalCheck Report</title>
+      <style>
+        body{font-family:Arial,Helvetica,sans-serif;margin:32px;color:#111;}
+        h1{margin:0 0 6px;font-size:22px;}
+        .meta{color:#444;margin:0 0 18px;}
+        .pill{display:inline-block;border:1px solid #ddd;border-radius:999px;padding:6px 10px;font-size:12px;margin-right:8px;}
+        .box{border:1px solid #ddd;border-radius:12px;padding:14px;margin:12px 0;}
+        h2{font-size:14px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.08em;color:#333;}
+        ul{margin:8px 0 0 18px;}
+        pre{white-space:pre-wrap;border:1px solid #ddd;border-radius:12px;padding:12px;}
+      </style></head><body>
+        <h1>SignalCheck report</h1>
+        <p class="meta">
+          <span class="pill">Verdict: ${esc(humanVerdict(report.verdict))}</span>
+          <span class="pill">Confidence: ${esc(safeNum(report.confidence))}%</span>
+          <span class="pill">Risk: ${esc(safeNum(report.risk_score))}/100</span>
+        </p>
+        <div class="box"><h2>Summary</h2><div>${esc(report.summary || "")}</div></div>
+        <div class="box"><h2>Plain-English rewrite</h2><div>${esc(report.plain_english_rewrite || "")}</div></div>
+        <div class="box"><h2>Key claims</h2><ul>${claims || "<li>(none)</li>"}</ul></div>
+        <div class="box"><h2>Green flags</h2><ul>${greens || "<li>(none)</li>"}</ul></div>
+        <div class="box"><h2>Red flags</h2><ul>${reds || "<li>(none)</li>"}</ul></div>
+        <div class="box"><h2>Questions to ask next</h2><ul>${questions || "<li>(none)</li>"}</ul></div>
+        <div class="box"><h2>Source transcript</h2><pre>${esc(transcript || "")}</pre></div>
+      </body></html>`;
+    }
+
+    function copyReportJson() {
+      if (!lastReport) {
+        return showError("No report to copy yet.");
+      }
+      copyToClipboard(JSON.stringify(lastReport, null, 2), "Report JSON copied.");
+    }
+
+    function downloadReportJson() {
+      if (!lastReport) {
+        return showError("No report to download yet.");
+      }
+      downloadFile("signalcheck-report.json", JSON.stringify(lastReport, null, 2), "application/json");
+    }
+
+    function downloadReportMarkdown() {
+      if (!lastReport) {
+        return showError("No report to download yet.");
+      }
+      const markdown = buildMarkdown(lastReport, els.transcriptInput.value.trim());
+      downloadFile("signalcheck-report.md", markdown, "text/markdown");
+    }
+
+    function buildMarkdown(report, transcript) {
+      const sections = [];
+      sections.push("# SignalCheck report");
+      sections.push("");
+      sections.push("**Verdict:** " + humanVerdict(report.verdict));
+      sections.push("**Confidence:** " + safeNum(report.confidence) + "%");
+      sections.push("**Risk score:** " + safeNum(report.risk_score) + "/100");
+      sections.push("");
+      sections.push("## Summary");
+      sections.push(report.summary || "");
+      sections.push("");
+      sections.push("## Plain-English rewrite");
+      sections.push(report.plain_english_rewrite || "");
+      sections.push("");
+      sections.push("## Key claims");
+      (report.key_claims || []).forEach((item) => sections.push("- " + item));
+      sections.push("");
+      sections.push("## Green flags");
+      (report.green_flags || []).forEach((item) => sections.push("- " + item));
+      sections.push("");
+      sections.push("## Red flags");
+      (report.red_flags || []).forEach((item) => sections.push("- " + item));
+      sections.push("");
+      sections.push("## Claim assessments");
+      (report.claim_assessments || []).forEach((item) => {
+        sections.push("- **" + item.claim + "** — " + item.assessment);
+        sections.push("  - Reason: " + item.reason);
+        sections.push("  - Evidence gap: " + item.evidence_gap);
+      });
+      sections.push("");
+      sections.push("## Jargon or weasel wording");
+      (report.jargon_terms || []).forEach((item) => {
+        sections.push("- **" + item.term + "**");
+        sections.push("  - Why suspicious: " + item.why_it_is_suspicious);
+        sections.push("  - Plain English: " + item.plain_english);
+      });
+      sections.push("");
+      sections.push("## Questions to ask next");
+      (report.questions_to_ask_next || []).forEach((item) => sections.push("- " + item));
+      sections.push("");
+      sections.push("## Source transcript");
+      sections.push("```");
+      sections.push(transcript || "");
+      sections.push("```");
+      return sections.join("\n");
+    }
+
+    function copyToClipboard(text, successMessage) {
+      navigator.clipboard.writeText(text).then(() => {
+        const previous = els.resultsMeta.textContent;
+        els.resultsMeta.textContent = successMessage;
+        setTimeout(() => {
+          if (els.resultsState.classList.contains("hidden")) return;
+          els.resultsMeta.textContent = previous;
+        }, 1800);
+      }).catch(() => {
+        showError("Clipboard copy failed in this browser.");
+      });
+    }
+
+    function downloadFile(filename, content, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function countWords(text) {
+      if (!text || !text.trim()) return 0;
+      return text.trim().split(/\s+/).length;
+    }
+
+    function capitalize(value) {
+      if (!value) return "";
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    function humanVerdict(value) {
+      if (value === "likely_bullshit") return "Likely bullshit";
+      return capitalize(value);
+    }
+
+    function safeNum(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+  </script>
 </body>
 </html>
